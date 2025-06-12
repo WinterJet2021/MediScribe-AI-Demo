@@ -13,7 +13,7 @@ AI-powered medical documentation assistant for doctors, designed to automate cli
 
 ## Live Demo
 
-Visit: [https://yourusername.github.io/mediscribe-app](https://yourusername.github.io/mediscribe-app)
+Visit: [[https://yourusername.github.io/mediscribe-app](https://yourusername.github.io/mediscribe-app)](https://winterjet2021.github.io/MediScribe-AI-Demo/)
 
 ## Technology Stack
 
