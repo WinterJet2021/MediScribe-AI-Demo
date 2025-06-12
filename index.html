@@ -1,0 +1,1286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediScribe - AI Medical Documentation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .app-container {
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+            width: min(95vw, 1400px);
+            height: min(90vh, 900px);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            color: white;
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .logo {
+            font-size: 32px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            letter-spacing: -0.5px;
+        }
+
+        .logo::before {
+            content: "🏥";
+            font-size: 36px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 14px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            width: 300px;
+            background: #f8f9fb;
+            border-right: 1px solid #e2e8f0;
+            padding: 30px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .content-area {
+            flex: 1;
+            padding: 40px;
+            overflow-y: auto;
+            background: white;
+        }
+
+        .screen {
+            display: none;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 28px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e2e8f0;
+            transition: all 0.3s ease;
+            margin-bottom: 24px;
+        }
+
+        .card:hover {
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+            transform: translateY(-2px);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            justify-content: center;
+            font-family: inherit;
+        }
+
+        .btn:hover {
+            background: linear-gradient(135deg, #2980b9, #21618c);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(52, 152, 219, 0.4);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #95a5a6, #7f8c8d);
+        }
+
+        .btn-secondary:hover {
+            background: linear-gradient(135deg, #7f8c8d, #6c7b7d);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #27ae60, #229954);
+        }
+
+        .btn-large {
+            padding: 18px 36px;
+            font-size: 18px;
+            width: 100%;
+            margin-bottom: 16px;
+        }
+
+        .input-group {
+            margin-bottom: 24px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 14px;
+        }
+
+        .input-group input, .input-group textarea, .input-group select {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        .input-group input:focus, .input-group textarea:focus, .input-group select:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 4px rgba(52, 152, 219, 0.1);
+        }
+
+        .recording-container {
+            text-align: center;
+            padding: 60px 40px;
+            background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+            border-radius: 20px;
+            margin-bottom: 30px;
+            border: 2px dashed #cbd5e0;
+            transition: all 0.3s ease;
+        }
+
+        .recording-container.active {
+            background: linear-gradient(135deg, #e8f5e8, #c8e6c9);
+            border-color: #27ae60;
+        }
+
+        .record-button {
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            border: none;
+            color: white;
+            font-size: 48px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 24px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 8px 30px rgba(231, 76, 60, 0.3);
+        }
+
+        .record-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 12px 40px rgba(231, 76, 60, 0.4);
+        }
+
+        .record-button.recording {
+            background: linear-gradient(135deg, #27ae60, #229954);
+            animation: pulse 2s infinite;
+        }
+
+        .record-button.processing {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(39, 174, 96, 0.7); }
+            70% { box-shadow: 0 0 0 30px rgba(39, 174, 96, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(39, 174, 96, 0); }
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 24px;
+            border-radius: 16px;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            border-left: 4px solid #3498db;
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+        }
+
+        .stat-number {
+            font-size: 36px;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 8px;
+        }
+
+        .stat-label {
+            color: #7f8c8d;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .notes-list {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .note-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+            border-bottom: 1px solid #e2e8f0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .note-item:hover {
+            background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+            padding-left: 16px;
+            padding-right: 16px;
+            border-radius: 12px;
+            transform: translateX(4px);
+        }
+
+        .note-item:last-child {
+            border-bottom: none;
+        }
+
+        .note-info {
+            flex: 1;
+        }
+
+        .note-patient {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 6px;
+            font-size: 16px;
+        }
+
+        .note-details {
+            color: #7f8c8d;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+
+        .note-diagnosis {
+            color: #3498db;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .nav-menu {
+            list-style: none;
+        }
+
+        .nav-item {
+            margin-bottom: 8px;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 16px 20px;
+            color: #4a5568;
+            text-decoration: none;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            font-size: 15px;
+        }
+
+        .nav-link:hover {
+            background: linear-gradient(135deg, #e2e8f0, #cbd5e0);
+            color: #2c3e50;
+            transform: translateX(4px);
+        }
+
+        .nav-link.active {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+        }
+
+        .nav-link::before {
+            font-size: 20px;
+            width: 24px;
+            text-align: center;
+        }
+
+        .search-container {
+            margin-bottom: 32px;
+            position: relative;
+        }
+
+        .search-container input {
+            width: 100%;
+            padding: 16px 20px 16px 50px;
+            border: 2px solid #e2e8f0;
+            border-radius: 16px;
+            font-size: 16px;
+            background: #f8fafc;
+        }
+
+        .search-container::before {
+            content: "🔍";
+            position: absolute;
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 18px;
+        }
+
+        .transcription-area {
+            background: #f8fafc;
+            padding: 24px;
+            border-radius: 16px;
+            min-height: 350px;
+            margin-bottom: 24px;
+            border: 2px solid #e2e8f0;
+            position: relative;
+        }
+
+        .transcription-text {
+            width: 100%;
+            background: transparent;
+            border: none;
+            resize: vertical;
+            min-height: 300px;
+            font-size: 16px;
+            line-height: 1.7;
+            font-family: inherit;
+        }
+
+        .transcription-text:focus {
+            outline: none;
+        }
+
+        .page-title {
+            font-size: 32px;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+        }
+
+        .page-subtitle {
+            color: #7f8c8d;
+            margin-bottom: 32px;
+            font-size: 16px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 16px;
+            margin-top: 24px;
+        }
+
+        .button-group .btn {
+            flex: 1;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        .form-grid.full {
+            grid-template-columns: 1fr;
+        }
+
+        .ai-summary-card {
+            background: linear-gradient(135deg, #e8f4f8, #d1ecf1);
+            border: 2px solid #3498db;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .ai-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #3498db;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .processing-indicator {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 12px;
+            padding: 16px;
+            margin: 20px 0;
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #ddd;
+            border-top: 2px solid #f39c12;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-completed {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                padding: 20px;
+            }
+            
+            .app-container {
+                width: 100%;
+                height: 100vh;
+                border-radius: 0;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <header class="header">
+            <div class="logo">MediScribe</div>
+            <div class="user-info">
+                <span>Dr. Sarah Chen</span>
+                <div class="user-avatar">👩‍⚕️</div>
+            </div>
+        </header>
+
+        <div class="main-content">
+            <nav class="sidebar">
+                <ul class="nav-menu">
+                    <li class="nav-item">
+                        <a href="#" class="nav-link active" onclick="showScreen('dashboard')">
+                            <span>📊</span> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" onclick="showScreen('record')">
+                            <span>🎤</span> Record Visit
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" onclick="showScreen('transcription')">
+                            <span>📝</span> Transcription Preview
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" onclick="showScreen('edit')">
+                            <span>✏️</span> Edit & Finalize
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" onclick="showScreen('notes')">
+                            <span>📋</span> Note Viewer
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" onclick="showScreen('settings')">
+                            <span>⚙️</span> Settings
+                        </a>
+                    </li>
+                </ul>
+
+                <div style="margin-top: auto; padding-top: 20px; border-top: 1px solid #e2e8f0;">
+                    <button class="btn btn-secondary" style="width: 100%;">
+                        <span>🚪</span> Logout
+                    </button>
+                </div>
+            </nav>
+
+            <main class="content-area">
+                <!-- Dashboard Screen -->
+                <div id="dashboard" class="screen active">
+                    <h1 class="page-title">Dashboard</h1>
+                    <p class="page-subtitle">Welcome back! Here's your practice overview and recent activity.</p>
+
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-number">18</div>
+                            <div class="stat-label">Consultations Today</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number">127</div>
+                            <div class="stat-label">This Week</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number">8</div>
+                            <div class="stat-label">Pending Review</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number">96%</div>
+                            <div class="stat-label">AI Accuracy</div>
+                        </div>
+                    </div>
+
+                    <div class="notes-list">
+                        <h3 style="margin-bottom: 24px; color: #2c3e50; font-size: 20px;">Recent Notes</h3>
+                        <div class="note-item" onclick="showScreen('edit')">
+                            <div class="note-info">
+                                <div class="note-patient">John Mitchell</div>
+                                <div class="note-details">Today, 3:45 PM • Prostate Biopsy</div>
+                                <div class="note-diagnosis">Adenocarcinoma, Gleason 3+4=7</div>
+                            </div>
+                            <span class="status-badge status-pending">Pending</span>
+                        </div>
+                        <div class="note-item" onclick="showScreen('notes')">
+                            <div class="note-info">
+                                <div class="note-patient">Maria Rodriguez</div>
+                                <div class="note-details">Today, 2:15 PM • Breast Core Biopsy</div>
+                                <div class="note-diagnosis">Invasive ductal carcinoma</div>
+                            </div>
+                            <span class="status-badge status-completed">Complete</span>
+                        </div>
+                        <div class="note-item" onclick="showScreen('notes')">
+                            <div class="note-info">
+                                <div class="note-patient">David Kim</div>
+                                <div class="note-details">Today, 12:30 PM • Colon Biopsy</div>
+                                <div class="note-diagnosis">Moderately differentiated adenocarcinoma</div>
+                            </div>
+                            <span class="status-badge status-completed">Complete</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Record Visit Screen -->
+                <div id="record" class="screen">
+                    <h1 class="page-title">Record Visit</h1>
+                    <p class="page-subtitle">Start a new patient consultation recording.</p>
+
+                    <div class="card">
+                        <div class="form-grid">
+                            <div class="input-group">
+                                <label for="patient-name">Patient Name *</label>
+                                <input type="text" id="patient-name" placeholder="Enter patient full name" required>
+                            </div>
+                            <div class="input-group">
+                                <label for="visit-date">Visit Date *</label>
+                                <input type="date" id="visit-date" value="2024-06-12" required>
+                            </div>
+                        </div>
+
+                        <div class="recording-container" id="recordingContainer">
+                            <button class="record-button" id="recordBtn" onclick="toggleRecording()">
+                                🎤
+                            </button>
+                            <h3 id="recordingStatus" style="margin-bottom: 12px; color: #2c3e50;">Ready to Record</h3>
+                            <p id="recordingDescription" style="color: #7f8c8d;">Click the microphone to start recording your consultation</p>
+                        </div>
+
+                        <div class="button-group">
+                            <button class="btn btn-secondary">
+                                <span>📁</span> Upload Audio File
+                            </button>
+                            <button class="btn" onclick="processRecording()">
+                                <span>🤖</span> Process with AI
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Transcription Preview Screen -->
+                <div id="transcription" class="screen">
+                    <h1 class="page-title">Transcription Preview</h1>
+                    <p class="page-subtitle">AI-generated transcription from your audio recording.</p>
+
+                    <div class="ai-summary-card">
+                        <div class="ai-badge">
+                            <span>🤖</span> AI Generated
+                        </div>
+                        <h4 style="margin-bottom: 12px; color: #2c3e50;">Whisper Transcription Complete</h4>
+                        <p style="color: #7f8c8d; font-size: 14px;">Transcription accuracy: 94% • Processing time: 12 seconds</p>
+                    </div>
+
+                    <div class="card">
+                        <div class="input-group">
+                            <label for="raw-transcription">Raw Transcription</label>
+                            <div class="transcription-area">
+                                <textarea class="transcription-text" id="raw-transcription" placeholder="Transcribed text will appear here...">Patient John Mitchell, 68-year-old male, presents for prostate biopsy results consultation. The 12-core transrectal ultrasound-guided biopsy was performed last week. Pathology reveals adenocarcinoma in 4 of 12 cores, primarily located in the right peripheral zone. Gleason score 3+4 equals 7. No perineural invasion detected in this specimen. PSA level was 8.2 ng/mL prior to biopsy. Patient reports mild urinary frequency but denies hematuria or dysuria. Digital rectal examination shows moderately enlarged prostate with firm nodule palpated on right side. Discussed staging workup including MRI and bone scan. Patient appears anxious but receptive to treatment options discussion.</textarea>
+                            </div>
+                        </div>
+
+                        <div class="button-group">
+                            <button class="btn btn-secondary" onclick="regenerateTranscription()">
+                                <span>🔄</span> Regenerate
+                            </button>
+                            <button class="btn" onclick="generateSummary()">
+                                <span>✨</span> Generate AI Summary
+                            </button>
+                            <button class="btn" onclick="showScreen('edit')">
+                                <span>➡️</span> Continue to Edit
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Edit & Finalize Screen -->
+                <div id="edit" class="screen">
+                    <h1 class="page-title">Edit & Finalize Note</h1>
+                    <p class="page-subtitle">Review and structure the medical documentation.</p>
+
+                    <div class="card">
+                        <div class="form-grid">
+                            <div class="input-group">
+                                <label for="edit-patient-name">Patient Name *</label>
+                                <input type="text" id="edit-patient-name" value="John Mitchell" required>
+                            </div>
+                            <div class="input-group">
+                                <label for="edit-visit-date">Visit Date *</label>
+                                <input type="date" id="edit-visit-date" value="2024-06-12" required>
+                            </div>
+                        </div>
+
+                        <div class="form-grid">
+                            <div class="input-group">
+                                <label for="organ-examined">Organ Examined *</label>
+                                <select id="organ-examined" required>
+                                    <option value="">Select organ/system</option>
+                                    <option value="prostate" selected>Prostate Gland</option>
+                                    <option value="breast">Breast</option>
+                                    <option value="colon">Colon</option>
+                                    <option value="lung">Lung</option>
+                                    <option value="liver">Liver</option>
+                                    <option value="kidney">Kidney</option>
+                                </select>
+                            </div>
+                            <div class="input-group">
+                                <label for="specimen-type">Specimen Type</label>
+                                <select id="specimen-type">
+                                    <option value="">Select specimen type</option>
+                                    <option value="core-biopsy" selected>Core Biopsy</option>
+                                    <option value="fine-needle">Fine Needle Aspiration</option>
+                                    <option value="surgical">Surgical Specimen</option>
+                                    <option value="cytology">Cytology</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="input-group">
+                            <label for="diagnosis">Diagnosis *</label>
+                            <input type="text" id="diagnosis" value="Adenocarcinoma, Gleason 3+4 = 7" required>
+                        </div>
+
+                        <div class="input-group">
+                            <label for="perineural-invasion">Perineural Invasion</label>
+                            <select id="perineural-invasion">
+                                <option value="">Not specified</option>
+                                <option value="present">Present</option>
+                                <option value="absent" selected>Absent</option>
+                                <option value="suspicious">Suspicious</option>
+                            </select>
+                        </div>
+
+                        <div class="input-group">
+                            <label for="summary">Clinical Summary</label>
+                            <textarea id="summary" rows="4" placeholder="Brief summary of findings and clinical significance...">68-year-old male with newly diagnosed prostate adenocarcinoma, Gleason score 3+4=7, involving 4 of 12 biopsy cores. No perineural invasion identified. Staging workup recommended.</textarea>
+                        </div>
+
+                        <div class="input-group">
+                            <label for="notes">Additional Notes</label>
+                            <textarea id="notes" rows="6" placeholder="Detailed pathological findings, clinical correlations, recommendations...">Pathological findings: Adenocarcinoma identified in 4 of 12 cores from transrectal ultrasound-guided biopsy. Tumor predominantly involves right peripheral zone. Gleason pattern 3+4 with cribriform architecture noted. No high-grade prostatic intraepithelial neoplasia (HGPIN) seen in adjacent tissue.
+
+Clinical correlation: PSA 8.2 ng/mL, DRE with palpable nodule. Patient reports mild LUTS but no hematuria.
+
+Recommendations: 
+1. Staging MRI and bone scan
+2. Multidisciplinary team discussion
+3. Patient counseling regarding treatment options
+4. Follow-up in urology clinic in 2 weeks</textarea>
+                        </div>
+
+                        <div class="button-group">
+                            <button class="btn btn-secondary" onclick="regenerateAI()">
+                                <span>🤖</span> Regenerate with AI
+                            </button>
+                            <button class="btn btn-secondary" onclick="saveAsDraft()">
+                                <span>💾</span> Save as Draft
+                            </button>
+                            <button class="btn btn-success" onclick="finalizeNote()">
+                                <span>✅</span> Finalize Note
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Note Viewer Screen -->
+                <div id="notes" class="screen">
+                    <h1 class="page-title">Note Viewer</h1>
+                    <p class="page-subtitle">Browse, search, and manage your saved medical notes.</p>
+
+                    <div class="search-container">
+                        <input type="text" placeholder="Search by patient name, diagnosis, date..." id="noteSearch">
+                    </div>
+
+                    <div class="notes-list">
+                        <div class="note-item" onclick="viewNoteDetails('john-mitchell')">
+                            <div class="note-info">
+                                <div class="note-patient">John Mitchell</div>
+                                <div class="note-details">June 12, 2024 • Prostate Gland • Core Biopsy</div>
+                                <div class="note-diagnosis">Adenocarcinoma, Gleason 3+4=7 • No perineural invasion</div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <span class="status-badge status-completed">Complete</span>
+                                <span style="color: #3498db;">→</span>
+                            </div>
+                        </div>
+                        
+                        <div class="note-item" onclick="viewNoteDetails('maria-rodriguez')">
+                            <div class="note-info">
+                                <div class="note-patient">Maria Rodriguez</div>
+                                <div class="note-details">June 12, 2024 • Breast • Core Biopsy</div>
+                                <div class="note-diagnosis">Invasive ductal carcinoma, Grade 2 • ER/PR positive</div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <span class="status-badge status-completed">Complete</span>
+                                <span style="color: #3498db;">→</span>
+                            </div>
+                        </div>
+
+                        <div class="note-item" onclick="viewNoteDetails('david-kim')">
+                            <div class="note-info">
+                                <div class="note-patient">David Kim</div>
+                                <div class="note-details">June 12, 2024 • Colon • Surgical Specimen</div>
+                                <div class="note-diagnosis">Moderately differentiated adenocarcinoma • T3N1M0</div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <span class="status-badge status-completed">Complete</span>
+                                <span style="color: #3498db;">→</span>
+                            </div>
+                        </div>
+
+                        <div class="note-item" onclick="viewNoteDetails('sarah-johnson')">
+                            <div class="note-info">
+                                <div class="note-patient">Sarah Johnson</div>
+                                <div class="note-details">June 11, 2024 • Lung • Fine Needle Aspiration</div>
+                                <div class="note-diagnosis">Non-small cell lung carcinoma • Adenocarcinoma</div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <span class="status-badge status-completed">Complete</span>
+                                <span style="color: #3498db;">→</span>
+                            </div>
+                        </div>
+
+                        <div class="note-item" onclick="viewNoteDetails('robert-chen')">
+                            <div class="note-info">
+                                <div class="note-patient">Robert Chen</div>
+                                <div class="note-details">June 11, 2024 • Liver • Core Biopsy</div>
+                                <div class="note-diagnosis">Hepatocellular carcinoma • Well differentiated</div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <span class="status-badge status-completed">Complete</span>
+                                <span style="color: #3498db;">→</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="button-group" style="margin-top: 24px;">
+                        <button class="btn btn-secondary">
+                            <span>📊</span> Export Reports
+                        </button>
+                        <button class="btn btn-secondary">
+                            <span>📧</span> Email Selected
+                        </button>
+                        <button class="btn">
+                            <span>⬇️</span> Download Archive
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Settings Screen -->
+                <div id="settings" class="screen">
+                    <h1 class="page-title">Settings & Profile</h1>
+                    <p class="page-subtitle">Manage your account preferences and AI settings.</p>
+
+                    <div class="card">
+                        <h3 style="margin-bottom: 20px; color: #2c3e50;">Profile Information</h3>
+                        <div class="form-grid">
+                            <div class="input-group">
+                                <label for="doctor-name">Full Name</label>
+                                <input type="text" id="doctor-name" value="Dr. Sarah Chen">
+                            </div>
+                            <div class="input-group">
+                                <label for="doctor-email">Email Address</label>
+                                <input type="email" id="doctor-email" value="sarah.chen@mediscribe.com">
+                            </div>
+                        </div>
+                        <div class="form-grid">
+                            <div class="input-group">
+                                <label for="specialty">Medical Specialty</label>
+                                <select id="specialty">
+                                    <option value="pathology" selected>Pathology</option>
+                                    <option value="oncology">Oncology</option>
+                                    <option value="internal-medicine">Internal Medicine</option>
+                                    <option value="surgery">Surgery</option>
+                                    <option value="radiology">Radiology</option>
+                                </select>
+                            </div>
+                            <div class="input-group">
+                                <label for="license">Medical License</label>
+                                <input type="text" id="license" value="MD123456789">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3 style="margin-bottom: 20px; color: #2c3e50;">AI & Transcription Settings</h3>
+                        <div class="input-group">
+                            <label>
+                                <input type="checkbox" checked style="margin-right: 8px;">
+                                Enable AI Summarization (Gemini)
+                            </label>
+                            <p style="color: #7f8c8d; font-size: 14px; margin-top: 4px;">Automatically generate structured summaries from transcriptions</p>
+                        </div>
+                        <div class="input-group">
+                            <label>
+                                <input type="checkbox" checked style="margin-right: 8px;">
+                                Auto-detect Medical Terminology
+                            </label>
+                            <p style="color: #7f8c8d; font-size: 14px; margin-top: 4px;">Enhance transcription accuracy for medical terms</p>
+                        </div>
+                        <div class="input-group">
+                            <label for="transcription-language">Transcription Language</label>
+                            <select id="transcription-language">
+                                <option value="en" selected>English</option>
+                                <option value="es">Spanish</option>
+                                <option value="fr">French</option>
+                                <option value="de">German</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3 style="margin-bottom: 20px; color: #2c3e50;">Privacy & Security</h3>
+                        <div class="input-group">
+                            <label>
+                                <input type="checkbox" checked style="margin-right: 8px;">
+                                HIPAA Compliant Storage
+                            </label>
+                            <p style="color: #7f8c8d; font-size: 14px; margin-top: 4px;">All data encrypted and stored securely</p>
+                        </div>
+                        <div class="input-group">
+                            <label>
+                                <input type="checkbox" style="margin-right: 8px;">
+                                Enable Audit Logging
+                            </label>
+                            <p style="color: #7f8c8d; font-size: 14px; margin-top: 4px;">Track all access and modifications to patient records</p>
+                        </div>
+                        <div class="input-group">
+                            <label for="data-retention">Data Retention Period</label>
+                            <select id="data-retention">
+                                <option value="1-year">1 Year</option>
+                                <option value="5-years" selected>5 Years</option>
+                                <option value="10-years">10 Years</option>
+                                <option value="indefinite">Indefinite</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="button-group">
+                        <button class="btn btn-secondary">
+                            <span>🔄</span> Reset to Defaults
+                        </button>
+                        <button class="btn" onclick="saveSettings()">
+                            <span>💾</span> Save Changes
+                        </button>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        let isRecording = false;
+        let recordingTimer = null;
+        let recordingDuration = 0;
+
+        function showScreen(screenName) {
+            // Hide all screens
+            document.querySelectorAll('.screen').forEach(screen => {
+                screen.classList.remove('active');
+            });
+            
+            // Show selected screen
+            document.getElementById(screenName).classList.add('active');
+            
+            // Update navigation
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.remove('active');
+            });
+            
+            event.target.classList.add('active');
+        }
+
+        function toggleRecording() {
+            const recordBtn = document.getElementById('recordBtn');
+            const recordingContainer = document.getElementById('recordingContainer');
+            const status = document.getElementById('recordingStatus');
+            const description = document.getElementById('recordingDescription');
+            
+            if (!isRecording) {
+                // Start recording
+                isRecording = true;
+                recordingDuration = 0;
+                recordBtn.classList.add('recording');
+                recordBtn.innerHTML = '⏸️';
+                recordingContainer.classList.add('active');
+                status.textContent = 'Recording in Progress...';
+                description.textContent = 'Click to pause • Duration: 00:00';
+                
+                // Start timer
+                recordingTimer = setInterval(() => {
+                    recordingDuration++;
+                    const minutes = Math.floor(recordingDuration / 60);
+                    const seconds = recordingDuration % 60;
+                    description.textContent = `Click to pause • Duration: ${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                }, 1000);
+                
+            } else {
+                // Stop recording
+                isRecording = false;
+                clearInterval(recordingTimer);
+                recordBtn.classList.remove('recording');
+                recordBtn.innerHTML = '🎤';
+                recordingContainer.classList.remove('active');
+                status.textContent = 'Recording Complete';
+                const minutes = Math.floor(recordingDuration / 60);
+                const seconds = recordingDuration % 60;
+                description.textContent = `Duration: ${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')} • Ready to process`;
+            }
+        }
+
+        function processRecording() {
+            if (recordingDuration === 0) {
+                alert('Please record audio first or upload an audio file.');
+                return;
+            }
+            
+            // Show processing state
+            showProcessingIndicator('Processing audio with Whisper AI...');
+            
+            // Simulate AI processing
+            setTimeout(() => {
+                hideProcessingIndicator();
+                showScreen('transcription');
+                // Update nav
+                document.querySelectorAll('.nav-link').forEach(link => {
+                    link.classList.remove('active');
+                });
+                document.querySelector('[onclick="showScreen(\'transcription\')"]').classList.add('active');
+            }, 3000);
+        }
+
+        function generateSummary() {
+            showProcessingIndicator('Generating AI summary with Gemini...');
+            
+            // Simulate AI summary generation
+            setTimeout(() => {
+                hideProcessingIndicator();
+                
+                // Show AI summary card
+                const summaryCard = document.createElement('div');
+                summaryCard.className = 'ai-summary-card';
+                summaryCard.innerHTML = `
+                    <div class="ai-badge">
+                        <span>✨</span> AI Summary Generated
+                    </div>
+                    <h4 style="margin-bottom: 12px; color: #2c3e50;">Structured Medical Summary</h4>
+                    <p style="color: #7f8c8d; font-size: 14px; margin-bottom: 16px;">Auto-extracted key medical information ready for structured input</p>
+                    <div style="background: white; padding: 16px; border-radius: 8px; border-left: 4px solid #27ae60;">
+                        <strong>Patient:</strong> John Mitchell, 68M<br>
+                        <strong>Organ:</strong> Prostate Gland<br>
+                        <strong>Diagnosis:</strong> Adenocarcinoma, Gleason 3+4=7<br>
+                        <strong>Perineural Invasion:</strong> Absent<br>
+                        <strong>Summary:</strong> Newly diagnosed prostate cancer with staging workup recommended
+                    </div>
+                `;
+                
+                const transcriptionScreen = document.getElementById('transcription');
+                const card = transcriptionScreen.querySelector('.card');
+                card.insertBefore(summaryCard, card.firstChild);
+                
+            }, 2500);
+        }
+
+        function regenerateTranscription() {
+            const textarea = document.getElementById('raw-transcription');
+            const originalText = textarea.value;
+            
+            showProcessingIndicator('Regenerating transcription...');
+            textarea.style.opacity = '0.6';
+            
+            setTimeout(() => {
+                hideProcessingIndicator();
+                textarea.value = 'Patient John Mitchell, sixty-eight-year-old male, presents for consultation regarding prostate biopsy results. Twelve-core transrectal ultrasound-guided prostate biopsy performed one week ago. Pathological examination reveals adenocarcinoma present in four of twelve cores, predominantly affecting the right peripheral zone. Gleason grading shows pattern 3 plus 4 equals 7, indicating intermediate-grade disease. No evidence of perineural invasion detected in the examined tissue. Pre-biopsy prostate-specific antigen level measured at 8.2 nanograms per milliliter. Patient reports increased urinary frequency but denies blood in urine or painful urination. Physical examination demonstrates moderately enlarged prostate with firm nodular area palpable on the right side. Discussion included recommendation for staging studies including magnetic resonance imaging and bone scintigraphy. Patient demonstrates appropriate concern but appears receptive to treatment planning discussion.';
+                textarea.style.opacity = '1';
+            }, 2000);
+        }
+
+        function regenerateAI() {
+            showProcessingIndicator('Regenerating with AI assistance...');
+            
+            setTimeout(() => {
+                hideProcessingIndicator();
+                
+                // Update diagnosis field
+                document.getElementById('diagnosis').value = 'Prostatic adenocarcinoma, Gleason score 3+4=7 (Grade Group 2)';
+                
+                // Update summary
+                document.getElementById('summary').value = '68-year-old male with newly diagnosed intermediate-grade prostatic adenocarcinoma (Gleason 3+4=7) involving 33% of biopsy cores. No perineural invasion. Clinical stage T2a. Staging workup and treatment planning recommended.';
+                
+                // Update notes
+                document.getElementById('notes').value = `PATHOLOGICAL FINDINGS:
+• 12-core transrectal ultrasound-guided prostate biopsy
+• Adenocarcinoma present in 4/12 cores (33%)
+• Gleason pattern 3+4 = Grade Group 2
+• Tumor volume: estimated 15% of submitted tissue
+• Location: predominantly right peripheral zone
+• Perineural invasion: not identified
+
+CLINICAL CORRELATION:
+• PSA: 8.2 ng/mL (elevated)
+• DRE: moderately enlarged prostate, firm right-sided nodule
+• Symptoms: mild LUTS, no hematuria or dysuria
+
+STAGING AND RECOMMENDATIONS:
+1. Multiparametric MRI prostate for local staging
+2. Bone scan to exclude skeletal metastases
+3. Multidisciplinary team discussion
+4. Patient counseling regarding treatment options:
+   - Active surveillance vs definitive therapy
+   - Radical prostatectomy vs radiation therapy
+5. Urology follow-up in 2 weeks with imaging results`;
+                
+                alert('AI regeneration complete! Fields have been updated with enhanced medical terminology and structure.');
+            }, 3000);
+        }
+
+        function saveAsDraft() {
+            showProcessingIndicator('Saving as draft...');
+            
+            setTimeout(() => {
+                hideProcessingIndicator();
+                alert('Note saved as draft successfully!');
+            }, 1500);
+        }
+
+        function finalizeNote() {
+            // Validate required fields
+            const requiredFields = ['edit-patient-name', 'edit-visit-date', 'organ-examined', 'diagnosis'];
+            const missingFields = [];
+            
+            requiredFields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (!field.value.trim()) {
+                    missingFields.push(field.previousElementSibling.textContent.replace(' *', ''));
+                }
+            });
+            
+            if (missingFields.length > 0) {
+                alert(`Please fill in the following required fields: ${missingFields.join(', ')}`);
+                return;
+            }
+            
+            showProcessingIndicator('Finalizing note and updating records...');
+            
+            setTimeout(() => {
+                hideProcessingIndicator();
+                alert('Medical note finalized successfully! Added to patient record.');
+                showScreen('dashboard');
+                // Update nav
+                document.querySelectorAll('.nav-link').forEach(link => {
+                    link.classList.remove('active');
+                });
+                document.querySelector('[onclick="showScreen(\'dashboard\')"]').classList.add('active');
+            }, 2000);
+        }
+
+        function saveSettings() {
+            showProcessingIndicator('Saving settings...');
+            
+            setTimeout(() => {
+                hideProcessingIndicator();
+                alert('Settings saved successfully!');
+            }, 1500);
+        }
+
+        function viewNoteDetails(noteId) {
+            // In a real app, this would load the specific note data
+            showScreen('edit');
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.remove('active');
+            });
+            document.querySelector('[onclick="showScreen(\'edit\')"]').classList.add('active');
+        }
+
+        function showProcessingIndicator(message) {
+            // Remove existing indicator
+            const existing = document.querySelector('.processing-indicator');
+            if (existing) existing.remove();
+            
+            const indicator = document.createElement('div');
+            indicator.className = 'processing-indicator';
+            indicator.innerHTML = `
+                <div class="spinner"></div>
+                <span>${message}</span>
+            `;
+            
+            // Add to current screen
+            const activeScreen = document.querySelector('.screen.active');
+            activeScreen.insertBefore(indicator, activeScreen.firstChild);
+        }
+
+        function hideProcessingIndicator() {
+            const indicator = document.querySelector('.processing-indicator');
+            if (indicator) indicator.remove();
+        }
+
+        // Search functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('noteSearch');
+            if (searchInput) {
+                searchInput.addEventListener('input', function() {
+                    const searchTerm = this.value.toLowerCase();
+                    const noteItems = document.querySelectorAll('#notes .note-item');
+                    
+                    noteItems.forEach(item => {
+                        const patientName = item.querySelector('.note-patient').textContent.toLowerCase();
+                        const noteDetails = item.querySelector('.note-details').textContent.toLowerCase();
+                        const diagnosis = item.querySelector('.note-diagnosis').textContent.toLowerCase();
+                        
+                        if (patientName.includes(searchTerm) || 
+                            noteDetails.includes(searchTerm) || 
+                            diagnosis.includes(searchTerm)) {
+                            item.style.display = 'flex';
+                        } else {
+                            item.style.display = 'none';
+                        }
+                    });
+                });
+            }
+            
+            // Auto-focus patient name on record screen
+            const patientNameInput = document.getElementById('patient-name');
+            if (patientNameInput) {
+                patientNameInput.addEventListener('focus', function() {
+                    this.style.borderColor = '#3498db';
+                });
+            }
+        });
+    </script>
+</body>
+</html>
